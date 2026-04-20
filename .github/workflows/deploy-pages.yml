@@ -31,7 +31,11 @@ jobs:
         run: npm ci
 
       - name: Export web build
-        run: npx expo export --platform web --output-dir dist --base-url /${{ github.event.repository.name }}/
+        run: npx expo export --platform web --output-dir dist
+
+      - name: Rewrite paths for GitHub Pages project site
+        run: |
+          find dist -name "*.html" -type f -print0 | xargs -0 sed -i 's|href="/|href="./|g; s|src="/|src="./|g'
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
