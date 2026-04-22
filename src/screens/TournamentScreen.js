@@ -127,7 +127,17 @@ export default function TournamentScreen() {
   const handleStart = () => {
     const parsed = Number.parseInt(teamCount, 10);
 
-    if (!Number.isFinite(parsed) || !isPowerOfTwo(parsed)) {
+    if (!Number.isFinite(parsed) || parsed < 2) {
+      Alert.alert('Invalid teams', 'Enter a valid number of teams (minimum 2).');
+      return;
+    }
+
+    if (parsed % 2 !== 0) {
+      Alert.alert('Invalid teams', 'Odd team counts are not allowed. Use 2, 4, 8, 16, ...');
+      return;
+    }
+
+    if (!isPowerOfTwo(parsed)) {
       Alert.alert('Invalid teams', 'Enter a power of 2: 2, 4, 8, 16, ...');
       return;
     }
