@@ -22,20 +22,31 @@ import {
 export default function TournamentScreen() {
   const [teamCount, setTeamCount] = useState(2);
   const [activeCount, setActiveCount] = useState(2);
-  const [leftSelections, setLeftSelections] = useState(() => createInitialSelections(4));
-  const [rightSelections, setRightSelections] = useState(() => createInitialSelections(4));
+  const [leftTeams, setLeftTeams] = useState(() => ['']);
+  const [rightTeams, setRightTeams] = useState(() => ['']);
+  const [leftSelections, setLeftSelections] = useState(() => createInitialSelections(1));
+  const [rightSelections, setRightSelections] = useState(() => createInitialSelections(1));
+  const [finalWinner, setFinalWinner] = useState('Winner');
   const [winnerPrompt, setWinnerPrompt] = useState(null);
 
-  const teams = useMemo(() => generateTeams(activeCount), [activeCount]);
-  const midPoint = Math.ceil(teams.length / 2);
-  const leftTeams = teams.slice(0, midPoint);
-  const rightTeams = teams.slice(midPoint);
+  const teamOptions = useMemo(() => generateTeams(activeCount), [activeCount]);
+  const selectedTeams = useMemo(
+    () => [...leftTeams, ...rightTeams].filter(Boolean),
+    [leftTeams, rightTeams]
+  );
 
   useEffect(() => {
-    const sideTeamCount = activeCount / 2;
-    const freshSelections = createInitialSelections(sideTeamCount);
+    const freshTeams = generateTeams(activeCount);
+    const midPoint = Math.ceil(freshTeams.length / 2);
+    const freshLeftTeams = Array(midPoint).fill('');
+    const freshRightTeams = Array(midPoint).fill('');
+    const freshSelections = createInitialSelections(midPoint);
+
+    setLeftTeams(freshLeftTeams);
+    setRightTeams(freshRightTeams);
     setLeftSelections(freshSelections);
     setRightSelections(cloneSelectionRounds(freshSelections));
+    setFinalWinner('Winner');
   }, [activeCount]);
 
   const leftRounds = useMemo(
@@ -77,10 +88,12 @@ export default function TournamentScreen() {
       setLeftSelections((previous) =>
         applyWinnerSelection(previous, roundIndex, matchIndex, winnerIndex)
       );
-    } else {
+    } else if (side === 'right') {
       setRightSelections((previous) =>
         applyWinnerSelection(previous, roundIndex, matchIndex, winnerIndex)
       );
+    } else {
+      setFinalWinner(winnerName);
     }
 
     setWinnerPrompt(null);
@@ -122,6 +135,33 @@ export default function TournamentScreen() {
     setActiveCount(parsed);
   };
 
+  const handleTeamChange = (side, teamIndex, value) => {
+    const updateSideTeams = (previous, targetIndex) => {
+      const updated = previous.map((team, index) => {
+        if (index === targetIndex) {
+          return value;
+        }
+
+        return team === value ? '' : team;
+      });
+
+      return updated;
+    };
+
+    if (side === 'left') {
+      setLeftTeams((previous) => updateSideTeams(previous, teamIndex));
+      setRightTeams((previous) => previous.map((team) => (team === value ? '' : team)));
+      return;
+    }
+
+    setRightTeams((previous) => updateSideTeams(previous, teamIndex));
+    setLeftTeams((previous) => previous.map((team) => (team === value ? '' : team)));
+  };
+
+  const handleSelectFinalWinner = () => {
+    handleSelectWinner('final', 0, 0, leftFinalist, rightFinalist);
+  };
+
   return (
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -142,7 +182,10 @@ export default function TournamentScreen() {
             <View style={styles.bracketCanvas}>
               <BracketSide
                 teams={leftTeams}
+                teamOptions={teamOptions}
+                selectedTeams={selectedTeams}
                 selections={leftSelections}
+                onTeamChange={(teamIndex, value) => handleTeamChange('left', teamIndex, value)}
                 onSelectWinner={(roundIndex, matchIndex, topTeam, bottomTeam) =>
                   handleSelectWinner(
                     'left',
@@ -156,16 +199,28 @@ export default function TournamentScreen() {
 
               <View style={styles.centerRail}>
                 <View style={styles.centerLine} />
-                <View style={styles.centerOrb}>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.centerOrb,
+                    pressed && styles.centerOrbPressed,
+                    leftFinalist !== 'Winner' && rightFinalist !== 'Winner' &&
+                      styles.centerOrbInteractive,
+                  ]}
+                  onPress={handleSelectFinalWinner}
+                >
                   <Text style={styles.centerOrbText}>{leftFinalist}</Text>
                   <Text style={styles.centerOrbVs}>VS</Text>
                   <Text style={styles.centerOrbText}>{rightFinalist}</Text>
-                </View>
+                  <Text style={styles.centerOrbWinner}>{finalWinner}</Text>
+                </Pressable>
               </View>
 
               <BracketSide
                 teams={rightTeams}
+                teamOptions={teamOptions}
+                selectedTeams={selectedTeams}
                 selections={rightSelections}
+                onTeamChange={(teamIndex, value) => handleTeamChange('right', teamIndex, value)}
                 mirror
                 onSelectWinner={(roundIndex, matchIndex, topTeam, bottomTeam) =>
                   handleSelectWinner(
@@ -303,6 +358,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  centerOrbInteractive: {
+    borderColor: '#aab4c0',
+  },
+  centerOrbPressed: {
+    transform: [{ scale: 0.98 }],
+  },
   centerOrbText: {
     color: '#f4f7fb',
     fontSize: 14,
@@ -317,6 +378,14 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '900',
     letterSpacing: 2,
+  },
+  centerOrbWinner: {
+    marginTop: 6,
+    color: '#ffd86b',
+    fontSize: 12,
+    fontWeight: '800',
+    textAlign: 'center',
+    width: 122,
   },
   modalBackdrop: {
     flex: 1,

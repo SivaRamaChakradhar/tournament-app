@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Picker } from '@react-native-picker/picker';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Line } from 'react-native-svg';
 
@@ -18,7 +19,10 @@ const CONNECTOR_LOSE = '#ef4444';
 
 export default function BracketSide({
   teams,
+  teamOptions,
+  selectedTeams,
   selections,
+  onTeamChange,
   onSelectWinner,
   mirror = false,
 }) {
@@ -155,7 +159,26 @@ export default function BracketSide({
       {columns.map((column) =>
         column.cards.map((card) => (
           <View key={card.key} style={[styles.cardWrap, { left: card.x, top: card.top }]}>
-            {(() => {
+            {card.roundIndex === 0 ? (
+              <View style={[styles.pickerCard, mirror && styles.alignRight]}>
+                <Picker
+                  selectedValue={card.label || ''}
+                  onValueChange={(value) => onTeamChange(card.itemIndex, value)}
+                  style={styles.picker}
+                  dropdownIconColor="#1f2937"
+                >
+                  {!card.label ? <Picker.Item label="Select team" value="" /> : null}
+                  {(teamOptions ?? teams)
+                    .filter(
+                      (team) =>
+                        team === card.label || !(selectedTeams ?? []).includes(team)
+                    )
+                    .map((team) => (
+                    <Picker.Item key={team} label={team} value={team} />
+                    ))}
+                </Picker>
+              </View>
+            ) : (() => {
               const roundSelection = selections[card.roundIndex];
               const matchIndex = Math.floor(card.itemIndex / 2);
               const selectedTeam = roundSelection?.[matchIndex];
@@ -202,6 +225,26 @@ const styles = StyleSheet.create({
   },
   cardWrap: {
     position: 'absolute',
+  },
+  pickerCard: {
+    width: 136,
+    height: 50,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: '#cfd8e3',
+    backgroundColor: '#ffffff',
+    overflow: 'hidden',
+    justifyContent: 'center',
+    shadowColor: '#0f172a',
+    shadowOpacity: 0.1,
+    shadowRadius: 9,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
+  },
+  picker: {
+    width: '100%',
+    height: '100%',
+    color: '#1f2937',
   },
   matchPoint: {
     position: 'absolute',
