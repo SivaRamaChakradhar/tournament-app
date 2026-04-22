@@ -20,7 +20,7 @@ export default function TournamentHeader({
             value={teamCount}
             onChangeText={setTeamCount}
             keyboardType="numeric"
-            placeholder="Enter number of teams"
+            placeholder="Enter number of teams like 2, 4, 8, 16"
             placeholderTextColor="#8c95a1"
             style={styles.input}
           />

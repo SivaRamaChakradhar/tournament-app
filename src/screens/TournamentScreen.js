@@ -133,7 +133,7 @@ export default function TournamentScreen() {
     }
 
     if (parsed % 2 !== 0) {
-      Alert.alert('Invalid teams', 'Odd team counts are not allowed. Use 2, 4, 8, 16, ...');
+      Alert.alert('Invalid teams', 'Enter a power of 2: 2, 4, 8, 16, ...');
       return;
     }
 
@@ -171,6 +171,8 @@ export default function TournamentScreen() {
   const handleSelectFinalWinner = () => {
     handleSelectWinner('final', 0, 0, leftFinalist, rightFinalist);
   };
+
+  const hasFinalWinner = finalWinner !== 'Winner';
 
   return (
     <View style={styles.screen}>
@@ -212,6 +214,7 @@ export default function TournamentScreen() {
                 <Pressable
                   style={({ pressed }) => [
                     styles.centerOrb,
+                    hasFinalWinner && styles.centerOrbChampion,
                     pressed && styles.centerOrbPressed,
                     leftFinalist !== 'Winner' && rightFinalist !== 'Winner' &&
                       styles.centerOrbInteractive,
@@ -221,7 +224,33 @@ export default function TournamentScreen() {
                   <Text style={styles.centerOrbText}>{leftFinalist}</Text>
                   <Text style={styles.centerOrbVs}>VS</Text>
                   <Text style={styles.centerOrbText}>{rightFinalist}</Text>
-                  <Text style={styles.centerOrbWinner}>{finalWinner}</Text>
+                  <View
+                    style={[
+                      styles.centerWinnerTag,
+                      hasFinalWinner
+                        ? styles.centerWinnerTagActive
+                        : styles.centerWinnerTagIdle,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.centerWinnerTagText,
+                        hasFinalWinner
+                          ? styles.centerWinnerTagTextActive
+                          : styles.centerWinnerTagTextIdle,
+                      ]}
+                    >
+                      Champion
+                    </Text>
+                  </View>
+                  <Text
+                    style={[
+                      styles.centerOrbWinner,
+                      hasFinalWinner ? styles.centerOrbWinnerActive : styles.centerOrbWinnerIdle,
+                    ]}
+                  >
+                    {finalWinner}
+                  </Text>
                 </Pressable>
               </View>
 
@@ -371,6 +400,10 @@ const styles = StyleSheet.create({
   centerOrbInteractive: {
     borderColor: '#aab4c0',
   },
+  centerOrbChampion: {
+    borderColor: '#f7c948',
+    backgroundColor: '#5b6069',
+  },
   centerOrbPressed: {
     transform: [{ scale: 0.98 }],
   },
@@ -390,12 +423,44 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
   centerOrbWinner: {
-    marginTop: 6,
-    color: '#ffd86b',
-    fontSize: 12,
+    marginTop: 4,
+    fontSize: 13,
     fontWeight: '800',
     textAlign: 'center',
     width: 122,
+  },
+  centerOrbWinnerIdle: {
+    color: '#cfd8e3',
+  },
+  centerOrbWinnerActive: {
+    color: '#ffe59a',
+  },
+  centerWinnerTag: {
+    marginTop: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  centerWinnerTagIdle: {
+    backgroundColor: 'rgba(207, 216, 227, 0.15)',
+    borderColor: 'rgba(207, 216, 227, 0.4)',
+  },
+  centerWinnerTagActive: {
+    backgroundColor: '#fde68a',
+    borderColor: '#facc15',
+  },
+  centerWinnerTagText: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  centerWinnerTagTextIdle: {
+    color: '#dbe4ef',
+  },
+  centerWinnerTagTextActive: {
+    color: '#4a3600',
   },
   modalBackdrop: {
     flex: 1,
